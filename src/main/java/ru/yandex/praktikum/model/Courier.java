@@ -36,13 +36,4 @@ public class Courier {
         this.firstName = firstName;
     }
 
-    @Override
-    public String toString() {
-        return "Courier{" +
-                "login='" + login + '\'' +
-                ", password='" + password + '\'' +
-                ", firstName='" + firstName + '\'' +
-                '}';
-    }
-
 }

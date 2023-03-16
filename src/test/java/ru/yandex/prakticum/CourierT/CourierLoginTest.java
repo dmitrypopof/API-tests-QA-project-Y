@@ -3,7 +3,7 @@ package ru.yandex.prakticum.CourierT;
 import io.qameta.allure.Description;
 import io.qameta.allure.Step;
 import io.qameta.allure.junit4.DisplayName;
-import io.restassured.response.ValidatableResponse;
+import io.restassured.response.Response;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,6 +20,8 @@ public class CourierLoginTest {
     @Before
     public void setUp(){
         courierClient = new CourierClient();
+        Courier courier = new Courier(CourierGenerator.LOGIN_GEN,CourierGenerator.PASSWORD_GEN,CourierGenerator.FIRST_NAME_GEN);
+        courierClient.create(courier);
 
     }
 
@@ -28,10 +30,10 @@ public class CourierLoginTest {
     @Description("Post запрос на ручку /api/v1/courier/login")
     @Step("Основной шаг - тест логин курьера")
     public void courierCanAuthorizations(){
-        Courier courier = CourierGenerator.getRandom();
-        ValidatableResponse createResponse = courierClient.create(courier);
-        ValidatableResponse loginResponse = courierClient.login(CredentialsForLogin.from(courier));
-        loginResponse.assertThat().statusCode(HTTP_OK);
+        CourierLogin courierLogin = new CourierLogin(CourierGenerator.LOGIN_GEN,CourierGenerator.PASSWORD_GEN);
+        courierClient.login(courierLogin)
+                .then().
+                assertThat().statusCode(HTTP_OK);
     }
 
     @Test
@@ -39,10 +41,10 @@ public class CourierLoginTest {
     @Description("Post запрос на ручку /api/v1/courier/login")
     @Step("Основной шаг - тест логин курьера")
     public void courierCanAuthorizationsReturnId(){
-        Courier courier = CourierGenerator.getRandom();
-        ValidatableResponse createResponse = courierClient.create(courier);
-        ValidatableResponse loginResponse = courierClient.login(CredentialsForLogin.from(courier));
-        loginResponse.assertThat().body("id", notNullValue());
+        CourierLogin courierLogin = new CourierLogin(CourierGenerator.LOGIN_GEN,CourierGenerator.PASSWORD_GEN);
+        courierClient.login(courierLogin)
+                .then().
+                assertThat().body("id",notNullValue());
     }
 
     @Test
@@ -50,10 +52,10 @@ public class CourierLoginTest {
     @Description("Post запрос на ручку /api/v1/courier/login")
     @Step("Основной шаг - тест логин курьера")
     public void courierCanNotAuthorizationsWithoutLogin(){
-        Courier courier = CourierGenerator.getRandom();
-        ValidatableResponse createResponse = courierClient.create(courier);
-        ValidatableResponse loginResponse = courierClient.loginNotLog(CredentialsForLoginNotLogin.from(courier));
-        loginResponse.assertThat().statusCode(HTTP_BAD_REQUEST);
+        CourierLogin courierLogin = new CourierLogin(null,CourierGenerator.PASSWORD_GEN);
+        courierClient.login(courierLogin)
+                .then().
+                assertThat().statusCode(HTTP_BAD_REQUEST);
     }
 
     @Test
@@ -61,10 +63,11 @@ public class CourierLoginTest {
     @Description("Post запрос на ручку /api/v1/courier/login")
     @Step("Основной шаг - тест логин курьера")
     public void courierCanNotAuthorizationsWithoutPassword(){
-        Courier courier = CourierGenerator.getRandom();
-        ValidatableResponse createResponse = courierClient.create(courier);
-        ValidatableResponse loginResponse = courierClient.loginNotPass(CredentialsForLoginNotPassword.from(courier));
-        loginResponse.assertThat().statusCode(HTTP_BAD_REQUEST);
+        CourierLogin courierLoginForDelete = new CourierLogin(CourierGenerator.LOGIN_GEN,CourierGenerator.PASSWORD_GEN);
+            CourierLogin courierLogin = new CourierLogin(CourierGenerator.LOGIN_GEN,null);
+            courierClient.login(courierLogin)
+                    .then().
+                    assertThat().statusCode(HTTP_BAD_REQUEST);
     }
 
     @Test
@@ -72,13 +75,12 @@ public class CourierLoginTest {
     @Description("Post запрос на ручку /api/v1/courier/login")
     @Step("Основной шаг - тест логин курьера")
     public void courierCanNotAuthorizationsIncorrectLogin(){
-        Courier courier = CourierGenerator.getRandom();
-        ValidatableResponse createResponse = courierClient.create(courier);
-        ValidatableResponse loginResponse = courierClient.loginErrorLog(CredentialsForLoginErrorLog.from(courier));
-        loginResponse.assertThat().statusCode(HTTP_NOT_FOUND)
+        CourierLogin courierLogin = new CourierLogin(CourierGenerator.LOGIN_SECOND_GEN,CourierGenerator.PASSWORD_GEN);
+        courierClient.login(courierLogin)
+                .then()
+                .statusCode(HTTP_NOT_FOUND)
                 .and()
                 .assertThat().extract().path("message","Учетная запись не найдена");
-
     }
 
     @Test
@@ -86,10 +88,10 @@ public class CourierLoginTest {
     @Description("Post запрос на ручку /api/v1/courier/login")
     @Step("Основной шаг - тест логин курьера")
     public void courierCanNotAuthorizationsIncorrectPassword(){
-        Courier courier = CourierGenerator.getRandom();
-        ValidatableResponse createResponse = courierClient.create(courier);
-        ValidatableResponse loginResponse = courierClient.loginErrorPass(CredentialsForLoginErrorPassword.from(courier));
-        loginResponse.assertThat().statusCode(HTTP_NOT_FOUND)
+        CourierLogin courierLogin = new CourierLogin(CourierGenerator.LOGIN_GEN,CourierGenerator.PASSWORD_SECOND_GEN);
+        courierClient.login(courierLogin)
+                .then()
+                .statusCode(HTTP_NOT_FOUND)
                 .and()
                 .assertThat().extract().path("message","Учетная запись не найдена");
     }
@@ -98,7 +100,10 @@ public class CourierLoginTest {
     @After
     @Step("Постусловие.Удаление курьера")
     public void clearData() {
+        CourierLogin courierLoginForDelete = new CourierLogin(CourierGenerator.LOGIN_GEN,CourierGenerator.PASSWORD_GEN);
+        Response response = courierClient.login(courierLoginForDelete);
+        courierId = response.path("id");
         courierClient.delete(courierId);
-        System.out.println("Курьер удален");
+        System.out.println("удален - " + courierId);
     }
 }

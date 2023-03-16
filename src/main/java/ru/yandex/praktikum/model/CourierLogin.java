@@ -1,15 +1,12 @@
 package ru.yandex.praktikum.model;
 
-public class CredentialsForLoginErrorLog {
+public class CourierLogin {
     private String login;
     private String password;
 
-    public CredentialsForLoginErrorLog(String login, String password) {
+    public CourierLogin(String login, String password) {
         this.login = login;
         this.password = password;
-    }
-    public static CredentialsForLoginErrorLog from(Courier courier) {
-        return new CredentialsForLoginErrorLog("1234:=)", courier.getPassword());
     }
 
     public String getLogin() {
@@ -27,5 +24,4 @@ public class CredentialsForLoginErrorLog {
     public void setPassword(String password) {
         this.password = password;
     }
-
 }
